@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Nota — Beautiful Notes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&family=Space+Mono&family=Cormorant+Garamond:ital,wght@0,300;1,300&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --accent: #7F77DD;
+    --accent-light: #EEEDFE;
+    --accent-dark: #3C3489;
+    --muted: #888780;
+    --bg-primary: #ffffff;
+    --bg-secondary: #f7f6ff;
+    --text-primary: #1a1a18;
+    --text-secondary: #5f5e5a;
+    --border: rgba(127,119,221,0.18);
+    --border-subtle: rgba(0,0,0,0.08);
+    --radius-md: 8px;
+    --radius-lg: 12px;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg-primary: #1c1b22;
+      --bg-secondary: #15141a;
+      --text-primary: #f0eff8;
+      --text-secondary: #a09fa8;
+      --border: rgba(127,119,221,0.22);
+      --border-subtle: rgba(255,255,255,0.08);
+    }
+  }
+
+  html, body { height: 100%; font-family: 'DM Sans', sans-serif; background: var(--bg-secondary); color: var(--text-primary); }
+
+  body { display: flex; flex-direction: column; min-height: 100vh; }
+
+  .app-shell { display: flex; flex-direction: column; height: 100vh; max-width: 1100px; margin: 0 auto; width: 100%; }
+
+  /* TOP NAV */
+  .top-nav {
+    display: flex; align-items: center; padding: 0 24px; height: 54px;
+    border-bottom: 0.5px solid var(--border-subtle);
+    background: var(--bg-primary);
+    gap: 12px;
+  }
+  .logo-dot { width: 30px; height: 30px; border-radius: 9px; background: var(--accent); display: flex; align-items: center; justify-content: center; color: white; font-size: 16px; flex-shrink: 0; }
+  .logo-text { font-family: 'Playfair Display', serif; font-size: 18px; font-weight: 600; color: var(--text-primary); letter-spacing: -0.3px; }
+  .nav-spacer { flex: 1; }
+  .nav-hint { font-size: 12px; color: var(--muted); font-family: 'Space Mono', monospace; }
+
+  /* LAYOUT */
+  .main-layout { display: flex; flex: 1; overflow: hidden; }
+
+  /* SIDEBAR */
+  .sidebar { width: 240px; min-width: 240px; border-right: 0.5px solid var(--border-subtle); display: flex; flex-direction: column; background: var(--bg-secondary); }
+  .sidebar-header { padding: 16px 16px 12px; border-bottom: 0.5px solid var(--border-subtle); }
+  .new-btn { width: 100%; padding: 9px 14px; background: var(--accent); color: white; border: none; border-radius: var(--radius-md); font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; transition: opacity 0.15s; }
+  .new-btn:hover { opacity: 0.88; }
+  .search-wrap { padding: 10px 14px; border-bottom: 0.5px solid var(--border-subtle); position: relative; }
+  .search-wrap .ti { position: absolute; left: 23px; top: 50%; transform: translateY(-50%); color: var(--muted); font-size: 14px; pointer-events: none; }
+  .search-box { width: 100%; padding: 7px 10px 7px 28px; border-radius: var(--radius-md); border: 0.5px solid var(--border-subtle); background: var(--bg-primary); font-family: 'DM Sans', sans-serif; font-size: 12px; color: var(--text-primary); outline: none; }
+  .search-box:focus { border-color: var(--accent); }
+  .notes-list { flex: 1; overflow-y: auto; padding: 8px 10px; }
+  .notes-list::-webkit-scrollbar { width: 3px; }
+  .notes-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+  .section-label { font-size: 10px; font-weight: 500; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); padding: 8px 8px 4px; }
+  .note-item { padding: 10px; border-radius: var(--radius-md); cursor: pointer; transition: background 0.1s; margin-bottom: 2px; border: 0.5px solid transparent; }
+  .note-item:hover { background: var(--bg-primary); }
+  .note-item.active { background: var(--accent-light); border-color: var(--border); }
+  .note-item-title { font-size: 13px; font-weight: 500; color: var(--text-primary); margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .note-item.active .note-item-title { color: var(--accent-dark); }
+  .note-item-preview { font-size: 11px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .note-item-date { font-size: 10px; color: var(--muted); margin-top: 4px; font-family: 'Space Mono', monospace; }
+  .tag-dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; margin-right: 4px; vertical-align: middle; }
+
+  /* EDITOR */
+  .editor-area { flex: 1; display: flex; flex-direction: column; background: var(--bg-primary); min-width: 0; position: relative; }
+  .editor-toolbar { padding: 12px 24px; border-bottom: 0.5px solid var(--border-subtle); display: flex; align-items: center; gap: 8px; }
+  .toolbar-left { flex: 1; display: flex; align-items: center; gap: 8px; }
+  .toolbar-right { display: flex; align-items: center; gap: 6px; }
+  .font-select { border: 0.5px solid var(--border-subtle); border-radius: var(--radius-md); padding: 5px 8px; font-size: 12px; color: var(--text-secondary); background: var(--bg-secondary); cursor: pointer; font-family: 'DM Sans', sans-serif; outline: none; }
+  .color-tag { width: 18px; height: 18px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; transition: transform 0.1s; }
+  .color-tag:hover { transform: scale(1.15); }
+  .color-tag.sel { border-color: var(--text-secondary); }
+  .icon-btn { background: none; border: 0.5px solid var(--border-subtle); border-radius: var(--radius-md); padding: 6px 8px; cursor: pointer; color: var(--text-secondary); font-size: 15px; transition: background 0.1s, color 0.1s; display: flex; align-items: center; }
+  .icon-btn:hover { background: var(--bg-secondary); color: var(--text-primary); }
+  .icon-btn.danger:hover { background: #FCEBEB; color: #A32D2D; }
+  .icon-btn.share-btn:hover { background: #E1F5EE; color: #0F6E56; }
+  .note-meta { padding: 24px 32px 0; }
+  .note-title-input { width: 100%; border: none; outline: none; font-family: 'Playfair Display', serif; font-size: 28px; font-weight: 600; color: var(--text-primary); background: transparent; line-height: 1.3; margin-bottom: 8px; }
+  .note-title-input::placeholder { color: var(--border-subtle); opacity: 0.5; }
+  .note-subtitle-row { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+  .note-date-display { font-family: 'Space Mono', monospace; font-size: 11px; color: var(--muted); }
+  .note-tag-badge { font-family: 'DM Sans', sans-serif; font-size: 11px; padding: 2px 10px; border-radius: 20px; font-weight: 500; }
+  .divider { height: 0.5px; background: var(--border-subtle); margin: 0 32px; }
+  .note-body-wrap { flex: 1; padding: 18px 32px 24px; overflow-y: auto; }
+  .note-body { width: 100%; height: 100%; min-height: 380px; border: none; outline: none; resize: none; background: transparent; color: var(--text-primary); font-size: 15px; line-height: 1.85; }
+  .note-body::placeholder { color: var(--muted); opacity: 0.5; }
+  .bottom-bar { padding: 10px 32px; border-top: 0.5px solid var(--border-subtle); display: flex; align-items: center; justify-content: space-between; }
+  .word-count { font-family: 'Space Mono', monospace; font-size: 11px; color: var(--muted); }
+  .save-btn { padding: 8px 20px; background: var(--accent); color: white; border: none; border-radius: var(--radius-md); font-family: 'DM Sans', sans-serif; font-size: 12px; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: opacity 0.15s; }
+  .save-btn:hover { opacity: 0.88; }
+  .empty-state { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--muted); gap: 12px; }
+  .empty-state .ti { font-size: 44px; opacity: 0.25; }
+  .empty-state p { font-family: 'Cormorant Garamond', serif; font-size: 19px; font-style: italic; color: var(--muted); }
+
+  /* OVERLAYS */
+  .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.42); align-items: center; justify-content: center; z-index: 500; }
+  .overlay.show { display: flex; }
+  .modal-card { background: var(--bg-primary); border-radius: var(--radius-lg); border: 0.5px solid var(--border-subtle); padding: 28px 28px 24px; width: 340px; }
+  .modal-title { font-family: 'Playfair Display', serif; font-size: 19px; font-weight: 600; color: var(--text-primary); margin-bottom: 4px; }
+  .modal-sub { font-size: 12px; color: var(--muted); margin-bottom: 20px; }
+  .share-channels { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 18px; }
+  .share-ch { border: 0.5px solid var(--border-subtle); border-radius: var(--radius-md); padding: 14px 10px; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 7px; transition: background 0.12s, border-color 0.12s; background: var(--bg-secondary); }
+  .share-ch:hover { background: var(--bg-primary); border-color: var(--accent); }
+  .share-ch .ti { font-size: 22px; }
+  .share-ch span { font-size: 11px; font-weight: 500; color: var(--text-secondary); }
+  .share-ch.whatsapp .ti { color: #1D9E75; }
+  .share-ch.twitter .ti { color: #378ADD; }
+  .share-ch.email-ch .ti { color: #7F77DD; }
+  .share-ch.copy-ch .ti { color: #D85A30; }
+  .copy-link-row { display: flex; gap: 8px; align-items: center; margin-bottom: 16px; }
+  .copy-link-input { flex: 1; padding: 8px 10px; border: 0.5px solid var(--border-subtle); border-radius: var(--radius-md); font-family: 'Space Mono', monospace; font-size: 10px; color: var(--muted); background: var(--bg-secondary); outline: none; }
+  .copy-link-btn { padding: 8px 14px; background: var(--accent); color: white; border: none; border-radius: var(--radius-md); font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 5px; }
+  .copy-link-btn:hover { opacity: 0.88; }
+  .modal-close-row { display: flex; justify-content: flex-end; }
+  .btn-cancel { padding: 7px 16px; background: none; border: 0.5px solid var(--border-subtle); border-radius: var(--radius-md); font-size: 12px; cursor: pointer; color: var(--text-secondary); }
+  .confirm-card { background: var(--bg-primary); border-radius: var(--radius-lg); border: 0.5px solid var(--border-subtle); padding: 32px; max-width: 300px; text-align: center; }
+  .confirm-card h3 { font-family: 'Playfair Display', serif; font-size: 19px; font-weight: 600; color: var(--text-primary); margin-bottom: 8px; }
+  .confirm-card p { font-size: 13px; color: var(--muted); margin-bottom: 22px; line-height: 1.6; }
+  .confirm-actions { display: flex; gap: 10px; justify-content: center; }
+  .btn-delete { padding: 8px 20px; background: #E24B4A; color: white; border: none; border-radius: var(--radius-md); font-size: 13px; cursor: pointer; }
+
+  /* TOAST */
+  .toast { position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(12px); background: #2C2C2A; color: white; padding: 9px 20px; border-radius: var(--radius-md); font-size: 13px; opacity: 0; transition: opacity 0.2s, transform 0.2s; pointer-events: none; white-space: nowrap; z-index: 999; }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* MOBILE */
+  @media (max-width: 640px) {
+    .sidebar { width: 180px; min-width: 180px; }
+    .note-meta { padding: 16px 16px 0; }
+    .divider { margin: 0 16px; }
+    .note-body-wrap { padding: 14px 16px 16px; }
+    .bottom-bar { padding: 10px 16px; }
+    .editor-toolbar { padding: 10px 14px; }
+    .note-title-input { font-size: 22px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="app-shell">
+  <nav class="top-nav">
+    <div class="logo-dot"><i class="ti ti-notebook" aria-hidden="true"></i></div>
+    <span class="logo-text">Nota</span>
+    <span class="nav-spacer"></span>
+    <span class="nav-hint">beautiful notes</span>
+  </nav>
+
+  <div class="main-layout">
+
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <button class="new-btn" onclick="newNote()"><i class="ti ti-plus" aria-hidden="true"></i> New note</button>
+      </div>
+      <div class="search-wrap">
+        <i class="ti ti-search" aria-hidden="true"></i>
+        <input class="search-box" id="searchInput" type="text" placeholder="Search notes..." oninput="filterNotes()" />
+      </div>
+      <div class="notes-list" id="notesList"></div>
+    </aside>
+
+    <main class="editor-area">
+      <div class="empty-state" id="emptyState">
+        <i class="ti ti-writing" aria-hidden="true"></i>
+        <p>Your thoughts deserve a beautiful home.</p>
+      </div>
+
+      <div id="editorContent" style="display:none;flex-direction:column;flex:1;min-height:0;">
+        <div class="editor-toolbar">
+          <div class="toolbar-left">
+            <select class="font-select" id="fontSelect" onchange="changeFont(this.value)">
+              <option value="playfair">Playfair</option>
+              <option value="dm">DM Sans</option>
+              <option value="mono">Mono</option>
+              <option value="cormorant">Cormorant</option>
+            </select>
+            <div style="display:flex;gap:5px;align-items:center;">
+              <div class="color-tag sel" style="background:#7F77DD;" onclick="setTag('purple','#7F77DD','#EEEDFE','#3C3489')" title="Purple"></div>
+              <div class="color-tag" style="background:#1D9E75;" onclick="setTag('teal','#1D9E75','#E1F5EE','#085041')" title="Teal"></div>
+              <div class="color-tag" style="background:#D85A30;" onclick="setTag('coral','#D85A30','#FAECE7','#712B13')" title="Coral"></div>
+              <div class="color-tag" style="background:#378ADD;" onclick="setTag('blue','#378ADD','#E6F1FB','#0C447C')" title="Blue"></div>
+              <div class="color-tag" style="background:#D4537E;" onclick="setTag('pink','#D4537E','#FBEAF0','#72243E')" title="Pink"></div>
+            </div>
+          </div>
+          <div class="toolbar-right">
+            <button class="icon-btn share-btn" onclick="openShare()" title="Share note" aria-label="Share note"><i class="ti ti-share" aria-hidden="true"></i></button>
+            <button class="icon-btn danger" onclick="openConfirmDelete()" title="Delete note" aria-label="Delete note"><i class="ti ti-trash" aria-hidden="true"></i></button>
+          </div>
+        </div>
+
+        <div class="note-meta">
+          <input class="note-title-input" id="noteTitleInput" type="text" placeholder="Note title..." oninput="onEdit()" />
+          <div class="note-subtitle-row">
+            <span class="note-date-display" id="noteDateDisplay">—</span>
+            <span class="note-tag-badge" id="noteTagBadge" style="background:#EEEDFE;color:#3C3489;">Purple</span>
+          </div>
+        </div>
+        <div class="divider"></div>
+        <div class="note-body-wrap">
+          <textarea class="note-body" id="noteBody" placeholder="Begin writing your thoughts..." oninput="onEdit();updateCount();" style="font-family:'Playfair Display',serif;"></textarea>
+        </div>
+        <div class="bottom-bar">
+          <span class="word-count" id="wordCount">0 words</span>
+          <button class="save-btn" onclick="saveNote()"><i class="ti ti-device-floppy" aria-hidden="true"></i> Save</button>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- Share Modal -->
+<div class="overlay" id="shareOverlay">
+  <div class="modal-card">
+    <div class="modal-title">Share this note</div>
+    <div class="modal-sub" id="shareSubtitle">Share your note with the world</div>
+    <div class="share-channels">
+      <div class="share-ch whatsapp" onclick="shareWhatsApp()"><i class="ti ti-brand-whatsapp" aria-hidden="true"></i><span>WhatsApp</span></div>
+      <div class="share-ch twitter" onclick="shareTwitter()"><i class="ti ti-brand-x" aria-hidden="true"></i><span>X / Twitter</span></div>
+      <div class="share-ch email-ch" onclick="shareEmail()"><i class="ti ti-mail" aria-hidden="true"></i><span>Email</span></div>
+      <div class="share-ch copy-ch" onclick="shareDownload()"><i class="ti ti-download" aria-hidden="true"></i><span>Download .txt</span></div>
+    </div>
+    <div class="copy-link-row">
+      <input class="copy-link-input" id="shareLinkInput" type="text" readonly value="" />
+      <button class="copy-link-btn" onclick="copyLink()"><i class="ti ti-copy" aria-hidden="true"></i> Copy</button>
+    </div>
+    <div class="modal-close-row">
+      <button class="btn-cancel" onclick="closeShare()">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Modal -->
+<div class="overlay" id="deleteOverlay">
+  <div class="confirm-card">
+    <h3>Delete this note?</h3>
+    <p>This action cannot be undone. The note will be gone forever.</p>
+    <div class="confirm-actions">
+      <button class="btn-cancel" onclick="closeDelete()">Cancel</button>
+      <button class="btn-delete" onclick="doDelete()">Delete</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  const FONTS = {
+    playfair: "'Playfair Display', serif",
+    dm: "'DM Sans', sans-serif",
+    mono: "'Space Mono', monospace",
+    cormorant: "'Cormorant Garamond', serif"
+  };
+
+  let notes = JSON.parse(localStorage.getItem('nota_notes') || 'null') || [
+    { id: 1, title: "Morning thoughts", body: "There is something magical about the early hours — the city still half asleep, coffee steaming, the whole day ahead like a blank page.", tag: "purple", tagColor: "#7F77DD", tagBg: "#EEEDFE", tagText: "#3C3489", font: "playfair", date: "Jun 3, 2026" },
+    { id: 2, title: "Ideas for the project", body: "Color theory matters more than people think. Every palette tells a story. Warm hues feel urgent; cool hues feel eternal.", tag: "teal", tagColor: "#1D9E75", tagBg: "#E1F5EE", tagText: "#085041", font: "dm", date: "Jun 4, 2026" },
+    { id: 3, title: "Books to read", body: "1. The Design of Everyday Things\n2. Just My Type\n3. Notes on a Scandal\n4. The Creative Act — Rick Rubin", tag: "blue", tagColor: "#378ADD", tagBg: "#E6F1FB", tagText: "#0C447C", font: "mono", date: "Jun 5, 2026" },
+  ];
+
+  let activeId = null, dirty = false, nextId = Math.max(...notes.map(n => n.id), 3) + 1;
+  let currentTag = { name: "purple", color: "#7F77DD", bg: "#EEEDFE", text: "#3C3489" };
+
+  function persist() { localStorage.setItem('nota_notes', JSON.stringify(notes)); }
+  function fmtDate(d) { return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }); }
+
+  function renderList() {
+    const q = (document.getElementById('searchInput').value || '').toLowerCase();
+    const list = document.getElementById('notesList');
+    const filtered = q ? notes.filter(n => n.title.toLowerCase().includes(q) || n.body.toLowerCase().includes(q)) : notes;
+    list.innerHTML = '';
+    const label = document.createElement('div');
+    label.className = 'section-label';
+    label.textContent = q ? `${filtered.length} result${filtered.length !== 1 ? 's' : ''}` : 'All notes';
+    list.appendChild(label);
+    if (!filtered.length) {
+      const em = document.createElement('div');
+      em.style.cssText = 'padding:20px 8px;text-align:center;font-size:12px;color:var(--muted)';
+      em.textContent = 'No notes found';
+      list.appendChild(em); return;
+    }
+    filtered.forEach(n => {
+      const el = document.createElement('div');
+      el.className = 'note-item' + (n.id === activeId ? ' active' : '');
+      el.onclick = () => openNote(n.id);
+      el.innerHTML = `<div class="note-item-title"><span class="tag-dot" style="background:${n.tagColor}"></span>${n.title || 'Untitled'}</div><div class="note-item-preview">${n.body.slice(0, 55) || 'No content'}</div><div class="note-item-date">${n.date}</div>`;
+      list.appendChild(el);
+    });
+  }
+
+  function openNote(id) {
+    activeId = id; dirty = false;
+    const n = notes.find(x => x.id === id); if (!n) return;
+    document.getElementById('emptyState').style.display = 'none';
+    const ec = document.getElementById('editorContent'); ec.style.display = 'flex';
+    document.getElementById('noteTitleInput').value = n.title;
+    document.getElementById('noteBody').value = n.body;
+    document.getElementById('noteDateDisplay').textContent = n.date;
+    document.getElementById('noteTagBadge').textContent = n.tag.charAt(0).toUpperCase() + n.tag.slice(1);
+    document.getElementById('noteTagBadge').style.background = n.tagBg;
+    document.getElementById('noteTagBadge').style.color = n.tagText;
+    document.getElementById('noteBody').style.fontFamily = FONTS[n.font] || FONTS.playfair;
+    document.getElementById('fontSelect').value = n.font;
+    currentTag = { name: n.tag, color: n.tagColor, bg: n.tagBg, text: n.tagText };
+    highlightTag(n.tagColor); updateCount(); renderList();
+  }
+
+  function newNote() {
+    const n = { id: nextId++, title: '', body: '', tag: 'purple', tagColor: '#7F77DD', tagBg: '#EEEDFE', tagText: '#3C3489', font: 'playfair', date: fmtDate(new Date()) };
+    notes.unshift(n); persist(); renderList(); openNote(n.id);
+    setTimeout(() => document.getElementById('noteTitleInput').focus(), 50);
+  }
+
+  function saveNote() {
+    if (!activeId) return;
+    const n = notes.find(x => x.id === activeId); if (!n) return;
+    n.title = document.getElementById('noteTitleInput').value || 'Untitled';
+    n.body = document.getElementById('noteBody').value;
+    n.tag = currentTag.name; n.tagColor = currentTag.color; n.tagBg = currentTag.bg; n.tagText = currentTag.text;
+    n.font = document.getElementById('fontSelect').value;
+    dirty = false; persist(); showToast('Note saved ✓'); renderList();
+  }
+
+  function onEdit() { dirty = true; }
+  function updateCount() { const t = document.getElementById('noteBody').value.trim(); const w = t ? t.split(/\s+/).length : 0; document.getElementById('wordCount').textContent = w + ' word' + (w !== 1 ? 's' : ''); }
+  function changeFont(v) { document.getElementById('noteBody').style.fontFamily = FONTS[v] || FONTS.playfair; onEdit(); }
+  function setTag(name, color, bg, text) { currentTag = { name, color, bg, text }; document.getElementById('noteTagBadge').textContent = name.charAt(0).toUpperCase() + name.slice(1); document.getElementById('noteTagBadge').style.background = bg; document.getElementById('noteTagBadge').style.color = text; highlightTag(color); onEdit(); }
+  function highlightTag(ac) { document.querySelectorAll('.color-tag').forEach(el => { el.classList.remove('sel'); if (el.style.background === ac) el.classList.add('sel'); }); }
+  function filterNotes() { renderList(); }
+
+  function openShare() {
+    if (!activeId) return;
+    const n = notes.find(x => x.id === activeId); if (!n) return;
+    document.getElementById('shareSubtitle').textContent = `Share "${n.title || 'Untitled'}" with the world`;
+    document.getElementById('shareLinkInput').value = window.location.href;
+    document.getElementById('shareOverlay').classList.add('show');
+  }
+  function closeShare() { document.getElementById('shareOverlay').classList.remove('show'); }
+
+  function getShareText() { const n = notes.find(x => x.id === activeId); return n ? { title: n.title || 'Untitled', body: n.body || '' } : { title: '', body: '' }; }
+
+  function shareWhatsApp() { const { title, body } = getShareText(); const text = encodeURIComponent(`*${title}*\n\n${body}\n\n— shared from Nota`); window.open(`https://api.whatsapp.com/send?text=${text}`, '_blank'); closeShare(); showToast('Opening WhatsApp...'); }
+  function shareTwitter() { const { title, body } = getShareText(); const snippet = body.length > 180 ? body.slice(0, 177) + '...' : body; const text = encodeURIComponent(`"${snippet}"\n\n— ${title} · via Nota`); window.open(`https://twitter.com/intent/tweet?text=${text}`, '_blank'); closeShare(); showToast('Opening X / Twitter...'); }
+  function shareEmail() { const { title, body } = getShareText(); const subject = encodeURIComponent(`Note: ${title}`); const bodyEnc = encodeURIComponent(`${title}\n${'─'.repeat(40)}\n\n${body}\n\n— Shared from Nota`); window.location.href = `mailto:?subject=${subject}&body=${bodyEnc}`; closeShare(); showToast('Opening email...'); }
+  function shareDownload() {
+    const { title, body } = getShareText();
+    const content = `${title}\n${'='.repeat(title.length)}\n\n${body}\n\n— Created in Nota`;
+    const blob = new Blob([content], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = (title || 'note').replace(/\s+/g, '_') + '.txt';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+    closeShare(); showToast('Note downloaded!');
+  }
+  function copyLink() { navigator.clipboard.writeText(document.getElementById('shareLinkInput').value).then(() => showToast('Link copied!')).catch(() => showToast('Copy the URL from your address bar')); }
+
+  function openConfirmDelete() { if (!activeId) return; document.getElementById('deleteOverlay').classList.add('show'); }
+  function closeDelete() { document.getElementById('deleteOverlay').classList.remove('show'); }
+  function doDelete() {
+    notes = notes.filter(n => n.id !== activeId); persist();
+    document.getElementById('deleteOverlay').classList.remove('show');
+    activeId = null;
+    document.getElementById('editorContent').style.display = 'none';
+    document.getElementById('emptyState').style.display = 'flex';
+    showToast('Note deleted'); renderList();
+  }
+
+  function showToast(msg) { const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2400); }
+
+  renderList();
+  if (notes.length) openNote(notes[0].id);
+</script>
+</body>
+</html>
