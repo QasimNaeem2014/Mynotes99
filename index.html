@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Nota — Beautiful Notes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&family=Space+Mono&family=Cormorant+Garamond:ital,wght@0,300;1,300&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css" />
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+<div class="app-shell">
+  <nav class="top-nav">
+    <div class="logo-dot"><i class="ti ti-notebook" aria-hidden="true"></i></div>
+    <span class="logo-text">Nota</span>
+    <span class="nav-spacer"></span>
+    <span class="nav-hint">beautiful notes</span>
+  </nav>
+
+  <div class="main-layout">
+
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <button class="new-btn" onclick="newNote()"><i class="ti ti-plus" aria-hidden="true"></i> New note</button>
+      </div>
+      <div class="search-wrap">
+        <i class="ti ti-search" aria-hidden="true"></i>
+        <input class="search-box" id="searchInput" type="text" placeholder="Search notes..." oninput="filterNotes()" />
+      </div>
+      <div class="notes-list" id="notesList"></div>
+    </aside>
+
+    <main class="editor-area">
+      <div class="empty-state" id="emptyState">
+        <i class="ti ti-writing" aria-hidden="true"></i>
+        <p>Your thoughts deserve a beautiful home.</p>
+      </div>
+
+      <div id="editorContent" style="display:none;flex-direction:column;flex:1;min-height:0;">
+        <div class="editor-toolbar">
+          <div class="toolbar-left">
+            <select class="font-select" id="fontSelect" onchange="changeFont(this.value)">
+              <option value="playfair">Playfair</option>
+              <option value="dm">DM Sans</option>
+              <option value="mono">Mono</option>
+              <option value="cormorant">Cormorant</option>
+            </select>
+            <div style="display:flex;gap:5px;align-items:center;">
+              <div class="color-tag sel" style="background:#7F77DD;" onclick="setTag('purple','#7F77DD','#EEEDFE','#3C3489')" title="Purple"></div>
+              <div class="color-tag" style="background:#1D9E75;" onclick="setTag('teal','#1D9E75','#E1F5EE','#085041')" title="Teal"></div>
+              <div class="color-tag" style="background:#D85A30;" onclick="setTag('coral','#D85A30','#FAECE7','#712B13')" title="Coral"></div>
+              <div class="color-tag" style="background:#378ADD;" onclick="setTag('blue','#378ADD','#E6F1FB','#0C447C')" title="Blue"></div>
+              <div class="color-tag" style="background:#D4537E;" onclick="setTag('pink','#D4537E','#FBEAF0','#72243E')" title="Pink"></div>
+            </div>
+          </div>
+          <div class="toolbar-right">
+            <button class="icon-btn share-btn" onclick="openShare()" title="Share note" aria-label="Share note"><i class="ti ti-share" aria-hidden="true"></i></button>
+            <button class="icon-btn danger" onclick="openConfirmDelete()" title="Delete note" aria-label="Delete note"><i class="ti ti-trash" aria-hidden="true"></i></button>
+          </div>
+        </div>
+
+        <div class="note-meta">
+          <input class="note-title-input" id="noteTitleInput" type="text" placeholder="Note title..." oninput="onEdit()" />
+          <div class="note-subtitle-row">
+            <span class="note-date-display" id="noteDateDisplay">—</span>
+            <span class="note-tag-badge" id="noteTagBadge" style="background:#EEEDFE;color:#3C3489;">Purple</span>
+          </div>
+        </div>
+        <div class="divider"></div>
+        <div class="note-body-wrap">
+          <textarea class="note-body" id="noteBody" placeholder="Begin writing your thoughts..." oninput="onEdit();updateCount();" style="font-family:'Playfair Display',serif;"></textarea>
+        </div>
+        <div class="bottom-bar">
+          <span class="word-count" id="wordCount">0 words</span>
+          <button class="save-btn" onclick="saveNote()"><i class="ti ti-device-floppy" aria-hidden="true"></i> Save</button>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- Share Modal -->
+<div class="overlay" id="shareOverlay">
+  <div class="modal-card">
+    <div class="modal-title">Share this note</div>
+    <div class="modal-sub" id="shareSubtitle">Share your note with the world</div>
+    <div class="share-channels">
+      <div class="share-ch whatsapp" onclick="shareWhatsApp()"><i class="ti ti-brand-whatsapp" aria-hidden="true"></i><span>WhatsApp</span></div>
+      <div class="share-ch twitter" onclick="shareTwitter()"><i class="ti ti-brand-x" aria-hidden="true"></i><span>X / Twitter</span></div>
+      <div class="share-ch email-ch" onclick="shareEmail()"><i class="ti ti-mail" aria-hidden="true"></i><span>Email</span></div>
+      <div class="share-ch copy-ch" onclick="shareDownload()"><i class="ti ti-download" aria-hidden="true"></i><span>Download .txt</span></div>
+    </div>
+    <div class="copy-link-row">
+      <input class="copy-link-input" id="shareLinkInput" type="text" readonly value="" />
+      <button class="copy-link-btn" onclick="copyLink()"><i class="ti ti-copy" aria-hidden="true"></i> Copy</button>
+    </div>
+    <div class="modal-close-row">
+      <button class="btn-cancel" onclick="closeShare()">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Modal -->
+<div class="overlay" id="deleteOverlay">
+  <div class="confirm-card">
+    <h3>Delete this note?</h3>
+    <p>This action cannot be undone. The note will be gone forever.</p>
+    <div class="confirm-actions">
+      <button class="btn-cancel" onclick="closeDelete()">Cancel</button>
+      <button class="btn-delete" onclick="doDelete()">Delete</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="script.js"></script>
+</body>
+</html>
